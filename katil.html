@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>SözKedisi odasına katıl</title>
+<title>SözKedisi daveti</title>
 <link rel="stylesheet" href="style.css">
 <style>
   .code { font-size: 2.2rem; font-weight: 800; letter-spacing: .3rem; margin: .2rem 0 1rem; }
@@ -15,23 +15,37 @@
 </head>
 <body>
 <main>
-<h1>SözKedisi odasına davet edildiniz</h1>
-<p>Oda kodu:</p>
+<h1 id="title">SözKedisi'ne davet edildiniz</h1>
+<p id="label">Kod:</p>
 <p class="code" id="code">-</p>
-<a class="btn primary" id="open" href="#">Uygulamada aç ve katıl</a>
+<a class="btn primary" id="open" href="#">Uygulamada aç</a>
 <a class="btn secondary" href="https://play.google.com/store/apps/details?id=com.ramrems.sozkedisi">SözKedisi'ni Google Play'den indir</a>
-<p class="muted">Uygulama yüklü değilse önce indirin. Sonra bu bağlantıya yeniden dokunun ya da uygulamada <b>Oda koduyla katıl</b> deyip yukarıdaki kodu yazın.</p>
+<p class="muted" id="help"></p>
 </main>
 <script>
-  // Opens sozkedisi://join/<code> in the app on Android; elsewhere, or without the
-  // app, Android falls back to the Play Store page.
+  // ?kod=AB12C opens a room (sozkedisi://join/<code>); ?arkadas=8ZGKAJ sends a friend
+  // request (sozkedisi://friend/<code>). Without the app, Android goes to Google Play.
   var params = new URLSearchParams(location.search);
-  var code = (params.get('kod') || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8);
+  function clean(v) { return (v || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8); }
+  var room = clean(params.get('kod'));
+  var friend = clean(params.get('arkadas'));
   var play = 'https://play.google.com/store/apps/details?id=com.ramrems.sozkedisi';
+  var host = room ? 'join' : 'friend';
+  var code = room || friend;
+  if (room) {
+    document.getElementById('title').textContent = 'SözKedisi odasına davet edildiniz';
+    document.getElementById('label').textContent = 'Oda kodu:';
+    document.getElementById('open').textContent = 'Uygulamada aç ve odaya katıl';
+    document.getElementById('help').innerHTML = 'Uygulama yüklü değilse önce indirin. Sonra bu bağlantıya yeniden dokunun ya da uygulamada <b>Oda koduyla katıl</b> deyip kodu yazın.';
+  } else {
+    document.getElementById('label').textContent = 'Arkadaş kodu:';
+    document.getElementById('open').textContent = 'Uygulamada aç ve arkadaş ol';
+    document.getElementById('help').innerHTML = 'Uygulama yüklü değilse önce indirin. Sonra bu bağlantıya yeniden dokunun ya da uygulamada <b>Ben → Arkadaşlar</b> bölümüne kodu yazın.';
+  }
   document.getElementById('code').textContent = code || '-';
   var link = document.getElementById('open');
   if (/android/i.test(navigator.userAgent) && code) {
-    link.href = 'intent://join/' + code + '#Intent;scheme=sozkedisi;package=com.ramrems.sozkedisi;S.browser_fallback_url=' + encodeURIComponent(play) + ';end';
+    link.href = 'intent://' + host + '/' + code + '#Intent;scheme=sozkedisi;package=com.ramrems.sozkedisi;S.browser_fallback_url=' + encodeURIComponent(play) + ';end';
     setTimeout(function () { location.href = link.href; }, 300);
   } else {
     link.href = play;
